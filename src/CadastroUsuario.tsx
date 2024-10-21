@@ -1,4 +1,4 @@
-import { VStack, Image, Box, FormControl, Button, Radio, useToast, ScrollView, Text, Modal } from 'native-base';
+import { VStack, Image, Box, FormControl, Button, useToast, ScrollView, Text, Modal } from 'native-base';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Logo from './assets/dolly-fish.png';
 import { TEMAS } from './estilos/temas';
@@ -12,23 +12,23 @@ import MaskInput from 'react-native-mask-input';
 import { cadastrarUsuario } from './servicos/usuario';
 import { hashSenha } from './Criptografia';
 import logger from './Logger';
-import React from 'react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BackHandler } from 'react-native';
+
+const removeCpfMask = (cpf) => cpf.replace(/\D/g, '');
 
 export default function CadastroUsuario() {
     const navigation = useNavigation();
     const toast = useToast();
-    const [isDirty, setIsDirty] = React.useState(false);
+    const [isDirty, setIsDirty] = useState(false);
     const [isModalVisible, setModalVisible] = useState(false);
+    const [formData, setFormData] = useState(null);
 
     const schema = yup.object().shape({
         nome: yup
             .string()
             .matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/, 'Nome inválido')
-            .test('nome-completo', 'Informe o nome completo', (value) => {
-                return value && value.trim().split(' ').length >= 2;
-            })
+            .test('nome-completo', 'Informe o nome completo', (value) => value && value.trim().split(' ').length >= 2)
             .required('Nome é obrigatório'),
         cpf: yup.string().required('CPF é obrigatório').min(14, 'CPF inválido'),
         email: yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
@@ -51,20 +51,29 @@ export default function CadastroUsuario() {
         handleSubmit,
         formState: { errors },
         reset,
-        formState,
     } = useForm({
         resolver: yupResolver(schema),
     });
 
-    useEffect(() => {
-        setIsDirty(formState.isDirty);
-    }, [formState.isDirty]);
+    const onSubmit = (data) => {
+        console.log('Dados do formulário:', data);
+        handleCadastro(data);
+    };
 
-    async function cadastrar(data: any) {
+    const handleCadastro = async (data) => {
         try {
             const senhaHash = await hashSenha(data.senha);
+            const cleanCpf = removeCpfMask(data.cpf);
+            console.log('Dados para cadastro:', {
+                cpf: cleanCpf,
+                nome: data.nome,
+                email: data.email,
+                senha: senhaHash,
+                isActive: 1,
+                role: '',
+            });
             const resultado = await cadastrarUsuario({
-                cpf: data.cpf,
+                cpf: cleanCpf,
                 nome: data.nome,
                 email: data.email,
                 senha: senhaHash,
@@ -72,7 +81,7 @@ export default function CadastroUsuario() {
                 role: '',
             });
             logger.info(`Tentativa de cadastro do usuário: ${data.email}`);
-            console.log(data.cpf, data.nome, data.email, senhaHash);
+            console.log('Resultado do cadastro:', resultado);
 
             if (!resultado) {
                 toast.show({
@@ -87,20 +96,18 @@ export default function CadastroUsuario() {
                     description: 'O Usuário foi cadastrado com sucesso!',
                     backgroundColor: 'green.500',
                 });
+                reset();
+                setIsDirty(false);
             }
-
-            reset();
-            setIsDirty(false);
         } catch (err) {
             logger.error(`Erro ao cadastrar usuário: ${err.message}`);
-            console.error('Erro ao cadastrar usuário:', err);
             toast.show({
                 title: 'Erro!',
                 description: 'Ocorreu um erro durante o cadastro. Tente novamente.',
                 backgroundColor: 'red.500',
             });
         }
-    }
+    };
 
     useFocusEffect(
         React.useCallback(() => {
@@ -185,7 +192,7 @@ export default function CadastroUsuario() {
                         name="email"
                         render={({ field: { onChange, value } }) => (
                             <FormControl mt={3}>
-                                {FormControl.Label && <FormControl.Label>E-mail</FormControl.Label>}
+                                <FormControl.Label>E-mail</FormControl.Label>
                                 <MaskInput
                                     mask={null}
                                     value={value}
@@ -234,7 +241,7 @@ export default function CadastroUsuario() {
                     {errors.confirmacao && <Text style={{ color: 'red' }}>{errors.confirmacao.message}</Text>}
                 </Box>
 
-                <Button w="100%" bg={TEMAS.colors.blue[800]} my={5} borderRadius="lg" onPress={handleSubmit(cadastrar)}>
+                <Button w="100%" bg={TEMAS.colors.blue[800]} my={5} borderRadius="lg" onPress={handleSubmit(onSubmit)}>
                     Cadastrar
                 </Button>
             </VStack>
