@@ -11,7 +11,7 @@ import * as yup from 'yup';
 import MaskInput from 'react-native-mask-input';
 import { cadastrarUsuario } from './servicos/usuario';
 import { hashSenha } from './Criptografia';
-import logger from './Logger';
+import { logInfo, logError } from './Logger';
 import React, { useEffect, useState } from 'react';
 import { BackHandler } from 'react-native';
 
@@ -49,6 +49,7 @@ export default function CadastroUsuario() {
     const {
         control,
         handleSubmit,
+        watch,
         formState: { errors },
         reset,
     } = useForm({
@@ -56,7 +57,6 @@ export default function CadastroUsuario() {
     });
 
     const onSubmit = (data) => {
-        console.log('Dados do formulário:', data);
         handleCadastro(data);
     };
 
@@ -80,7 +80,7 @@ export default function CadastroUsuario() {
                 isActive: 1,
                 role: '',
             });
-            logger.info(`Tentativa de cadastro do usuário: ${data.email}`);
+            logInfo(`Tentativa de cadastro do usuário: ${data.email}`);
             console.log('Resultado do cadastro:', resultado);
 
             if (!resultado) {
@@ -90,7 +90,7 @@ export default function CadastroUsuario() {
                     backgroundColor: 'red.500',
                 });
             } else {
-                logger.info(`Cadastro realizado com sucesso para o usuário: ${data.email}`);
+                logInfo(`Cadastro realizado com sucesso para o usuário: ${data.email}`);
                 toast.show({
                     title: 'Usuário Cadastrado!',
                     description: 'O Usuário foi cadastrado com sucesso!',
@@ -100,7 +100,7 @@ export default function CadastroUsuario() {
                 setIsDirty(false);
             }
         } catch (err) {
-            logger.error(`Erro ao cadastrar usuário: ${err.message}`);
+            logError(`Erro ao cadastrar usuário: ${err.message}`);
             toast.show({
                 title: 'Erro!',
                 description: 'Ocorreu um erro durante o cadastro. Tente novamente.',
@@ -108,6 +108,13 @@ export default function CadastroUsuario() {
             });
         }
     };
+
+    useEffect(() => {
+        const subscription = watch((value, { name, type }) => {
+            if (!isDirty) setIsDirty(true);
+        });
+        return () => subscription.unsubscribe();
+    }, [control, isDirty]);
 
     useFocusEffect(
         React.useCallback(() => {

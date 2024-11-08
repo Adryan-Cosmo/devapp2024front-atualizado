@@ -1,7 +1,8 @@
-import { logger } from 'react-native-logs';
+import { logger, consoleTransport } from 'react-native-logs';
 
 const config = {
     severity: 'debug',
+    transport: consoleTransport,
     transportOptions: {
         colors: {
             info: 'blueBright',
@@ -10,6 +11,12 @@ const config = {
             debug: 'greenBright',
         },
     },
+    async: true,
+    dateFormat: 'time',
+    printLevel: true,
+    printDate: true,
+    fixedExtLvlLength: false,
+    enabled: true,
 };
 
 const log = logger.createLogger(config);

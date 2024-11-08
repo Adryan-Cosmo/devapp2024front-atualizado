@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 
-RUN npm install -g expo-cli
+RUN npm install -g expo-client
 
 
 WORKDIR /app
