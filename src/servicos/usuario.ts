@@ -2,6 +2,7 @@ import { Usuario } from "../interfaces/Usuario";
 import api from "./api";
 
 export async function cadastrarUsuario(usuario : Usuario){
+    console.log(usuario);
     if(!usuario) return null;
     try{
         const resultado = await api.post('/api/novousuario', usuario, {
