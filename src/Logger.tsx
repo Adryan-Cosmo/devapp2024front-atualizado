@@ -1,8 +1,37 @@
-import { logger, consoleTransport } from 'react-native-logs';
+import { logger, fileAsyncTransport } from 'react-native-logs';
+import * as FileSystem from 'expo-file-system';
+
+const logFilePath = `${FileSystem.documentDirectory}log.txt`;
+
+const writeLog = async (message: string) => {
+    const timestamp = new Date().toISOString();
+    const logMessage = `${timestamp} - ${message}\n`;
+
+    try {
+        await FileSystem.writeAsStringAsync(logFilePath, logMessage, {
+            encoding: FileSystem.EncodingType.UTF8,
+        });
+    } catch (error) {
+        console.error('Erro ao escrever o log no arquivo:', error);
+    }
+};
+
+const readLogFile = async () => {
+    try {
+        const content = await FileSystem.readAsStringAsync(logFilePath, {
+            encoding: FileSystem.EncodingType.UTF8,
+        });
+        console.log('🚀 ~ readLogFile ~ content:', content);
+    } catch (error) {
+        console.log('🚀 ~ readLogFile ~ error: Erro ao ler arquivo', error);
+    }
+};
 
 const config = {
     severity: 'debug',
-    transport: consoleTransport,
+    transport: (msg) => {
+        writeLog(msg.message);
+    },
     transportOptions: {
         colors: {
             info: 'blueBright',
@@ -11,12 +40,12 @@ const config = {
             debug: 'greenBright',
         },
     },
-    async: true,
-    dateFormat: 'time',
-    printLevel: true,
-    printDate: true,
-    fixedExtLvlLength: false,
-    enabled: true,
+    // async: true,
+    // dateFormat: 'time',
+    // printLevel: true,
+    // printDate: true,
+    // fixedExtLvlLength: false,
+    // enabled: true,
 };
 
 const log = logger.createLogger(config);

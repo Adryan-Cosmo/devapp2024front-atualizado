@@ -7,6 +7,7 @@ const Tab = createNativeStackNavigator();
 import Login from './Login';
 import Tabs from './tabs';
 import CadastroUsuario from './CadastroUsuario';
+import AtualizaUsuario from './AtualizaUsuario';
 import CadastrosPrincipal from './telas/cadastros/CadastrosPrincipal';
 import CadastroUnidadeProdutiva from './telas/cadastros/CadastroUnidadeProdutiva';
 import CadastroAlojamento from './telas/cadastros/CadastroAlojamento';
@@ -45,7 +46,7 @@ export default function Rotas() {
                 <Tab.Screen name="RelatorioBiometria" component={RelatorioBiometria} options={{ headerShown: false }} />
                 <Tab.Screen name="RelatorioManejo" component={RelatorioManejo} options={{ headerShown: false }} />
                 <Tab.Screen name="RelatorioUnidadeProdutiva" component={RelatorioUnidadeProdutiva} options={{ headerShown: false }} />
-
+                <Tab.Screen name="AtualizaUsuario" component={AtualizaUsuario} options={{ headerShown: false }} />
                 <Tab.Screen name="Teste" component={Teste} options={{ headerShown: false }} />
             </Tab.Navigator>
         </NavigationContainer>
