@@ -37,3 +37,29 @@ export async function buscarUsuarios() {
         return error;
     }
 }
+
+export async function atualizarUsuario(id: string, usuario: Usuario) {
+    if (!id || !usuario) {
+        console.error('ID ou usuário inválido:', { id, usuario });
+        return null;
+    }
+
+    console.log('Dados enviados para API:', { id, usuario }); // Log do payload
+
+    try {
+        const resultado = await api.put(
+            `/api/atualizausuario/${id}`,
+
+            usuario,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }
+        );
+        return resultado.data;
+    } catch (error) {
+        console.log('Erro ao atualizar usuário:', error);
+        return null;
+    }
+}

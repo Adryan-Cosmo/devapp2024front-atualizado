@@ -11,7 +11,7 @@ import * as yup from 'yup';
 import MaskInput from 'react-native-mask-input';
 import { cadastrarUsuario } from './servicos/usuario';
 import { hashSenha } from './Criptografia';
-import { logInfo, logError } from './Logger';
+// import { logInfo, logError } from './Logger';
 import React, { useEffect, useState } from 'react';
 import { BackHandler } from 'react-native';
 
@@ -76,7 +76,7 @@ export default function CadastroUsuario() {
                 isActive: 1,
                 role: '',
             });
-            logInfo(`Tentativa de cadastro do usuário: ${data.email}`);
+
             console.log('Resultado do cadastro:', resultado);
 
             if (!resultado) {
@@ -86,7 +86,13 @@ export default function CadastroUsuario() {
                     backgroundColor: 'red.500',
                 });
             } else {
-                logInfo(`Cadastro realizado com sucesso para o usuário: ${data.email}`);
+                // logInfo({
+                //     userId: resultado.data.id,
+                //     userName: data.nome,
+                //     itemId: resultado.data.id,
+                //     itemName: 'Cadastro de Usuário',
+                //     action: `Cadastro realizado com sucesso para o usuário: ${data.email}`,
+                // });
                 toast.show({
                     title: 'Usuário Cadastrado!',
                     description: 'O Usuário foi cadastrado com sucesso!',
@@ -96,7 +102,7 @@ export default function CadastroUsuario() {
                 setIsDirty(false);
             }
         } catch (err) {
-            logError(`Erro ao cadastrar usuário: ${err.message}`);
+            // logError(`Erro ao cadastrar usuário: ${err.message}`);
             toast.show({
                 title: 'Erro!',
                 description: 'Ocorreu um erro durante o cadastro. Tente novamente.',

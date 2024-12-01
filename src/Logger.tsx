@@ -1,36 +1,38 @@
-import { logger, fileAsyncTransport } from 'react-native-logs';
-import * as FileSystem from 'expo-file-system';
+import { logger } from 'react-native-logs';
+import api from './servicos/api'; // Importa o serviço de API configurado
 
-const logFilePath = `${FileSystem.documentDirectory}log.txt`;
-
-const writeLog = async (message: string) => {
-    const timestamp = new Date().toISOString();
-    const logMessage = `${timestamp} - ${message}\n`;
-
+// Função para enviar log para o banco de dados
+const sendLogToDatabase = async (userId: number, userName: string, itemId: number, itemName: string, action: string) => {
     try {
-        await FileSystem.writeAsStringAsync(logFilePath, logMessage, {
-            encoding: FileSystem.EncodingType.UTF8,
+        // Estrutura do log
+        const logData = {
+            userId,
+            userName,
+            itemId,
+            itemName,
+            action,
+            timestamp: new Date().toISOString(),
+        };
+
+        // Enviar log para a API
+        await api.post('/api/logs', logData, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
+
+        console.log('Log enviado com sucesso:', logData);
     } catch (error) {
-        console.error('Erro ao escrever o log no arquivo:', error);
+        console.error('Erro ao enviar log para o banco:', error);
     }
 };
 
-const readLogFile = async () => {
-    try {
-        const content = await FileSystem.readAsStringAsync(logFilePath, {
-            encoding: FileSystem.EncodingType.UTF8,
-        });
-        console.log('🚀 ~ readLogFile ~ content:', content);
-    } catch (error) {
-        console.log('🚀 ~ readLogFile ~ error: Erro ao ler arquivo', error);
-    }
-};
-
+// Configuração do logger
 const config = {
     severity: 'debug',
     transport: (msg) => {
-        writeLog(msg.message);
+        const { userId, userName, itemId, itemName, action } = msg.meta || {};
+        sendLogToDatabase(userId, userName, itemId, itemName, action);
     },
     transportOptions: {
         colors: {
@@ -40,30 +42,21 @@ const config = {
             debug: 'greenBright',
         },
     },
-    // async: true,
-    // dateFormat: 'time',
-    // printLevel: true,
-    // printDate: true,
-    // fixedExtLvlLength: false,
-    // enabled: true,
 };
 
 const log = logger.createLogger(config);
 
-log.info('Esta é uma mensagem de log de informação');
-log.warn('Esta é uma mensagem de aviso');
-log.error('Esta é uma mensagem de erro');
-
-export function logInfo(msg: string) {
-    log.info(msg);
+// Funções de log para diferentes ações
+export function logInfo(userId: number, userName: string, itemId: number, itemName: string, action: string) {
+    log.info(`Info: ${action}`, { userId, userName, itemId, itemName, action });
 }
 
-export function logError(msg: string) {
-    log.error(msg);
+export function logError(userId: number, userName: string, itemId: number, itemName: string, action: string) {
+    log.error(`Error: ${action}`, { userId, userName, itemId, itemName, action });
 }
 
-export function logWarn(msg: string) {
-    log.warn(msg);
+export function logWarn(userId: number, userName: string, itemId: number, itemName: string, action: string) {
+    log.warn(`Warn: ${action}`, { userId, userName, itemId, itemName, action });
 }
 
 export default log;
