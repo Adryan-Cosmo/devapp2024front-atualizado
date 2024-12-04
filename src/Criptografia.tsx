@@ -1,27 +1,22 @@
 import bcrypt from 'react-native-bcrypt';
-import { randomBytes } from 'crypto';
 
-export async function hashSenha(senha: string): Promise<string> {
-    const saltRounds = 10;
-
-    bcrypt.setRandomFallback((bytes) => {
-        return randomBytes(bytes);
-    });
-
+export async function hashSenha(senha: string, saltRounds: number = 12): Promise<string> {
     return new Promise((resolve, reject) => {
-        bcrypt.genSalt(saltRounds, (err, salt) => {
-            if (err) {
-                reject(new Error('Erro ao gerar o salt.'));
-            }
+        try {
+            // Gerar o salt diretamente com bcrypt
+            const salt = bcrypt.genSaltSync(saltRounds);
 
+            // Gerar o hash
             bcrypt.hash(senha, salt, (err, hash) => {
                 if (err) {
                     reject(new Error('Erro ao gerar o hash da senha.'));
+                    return;
                 }
-
                 resolve(hash);
             });
-        });
+        } catch (error) {
+            reject(new Error(`Erro ao gerar o salt ou o hash: ${error.message}`));
+        }
     });
 }
 
@@ -30,8 +25,8 @@ export async function verificarSenha(senha: string, hash: string): Promise<boole
         bcrypt.compare(senha, hash, (err, result) => {
             if (err) {
                 reject(new Error('Erro ao verificar a senha.'));
+                return;
             }
-
             resolve(result);
         });
     });

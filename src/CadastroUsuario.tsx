@@ -14,6 +14,10 @@ import { hashSenha } from './Criptografia';
 // import { logInfo, logError } from './Logger';
 import React, { useEffect, useState } from 'react';
 import { BackHandler } from 'react-native';
+import SyncService from './servicos/SyncService';
+import LocalStorageService from './servicos/LocalStorage';
+import NetInfo from '@react-native-community/netinfo';
+import { Usuario } from './interfaces/Usuario';
 
 const removeCpfMask = (cpf) => cpf.replace(/\D/g, '');
 
@@ -22,7 +26,7 @@ export default function CadastroUsuario() {
     const toast = useToast();
     const [isDirty, setIsDirty] = useState(false);
     const [isModalVisible, setModalVisible] = useState(false);
-    const [formData, setFormData] = useState(null);
+    const [dataCadastro, setDataCadastro] = useState(new Date().toISOString().slice(0, 10));
 
     const schema = yup.object().shape({
         nome: yup
@@ -60,46 +64,61 @@ export default function CadastroUsuario() {
         try {
             const senhaHash = await hashSenha(data.senha);
             const cleanCpf = removeCpfMask(data.cpf);
+            const usuario: Usuario = {
+                cpf: cleanCpf,
+                nome: data.nome,
+                email: data.email,
+                senha: senhaHash,
+                dataCadastro,
+                isActive: 1,
+                role: '',
+            };
             console.log('Dados para cadastro:', {
                 cpf: cleanCpf,
                 nome: data.nome,
                 email: data.email,
                 senha: senhaHash,
-                isActive: 1,
-                role: '',
-            });
-            const resultado = await cadastrarUsuario({
-                cpf: cleanCpf,
-                nome: data.nome,
-                email: data.email,
-                senha: senhaHash,
+                dataCadastro,
                 isActive: 1,
                 role: '',
             });
 
-            console.log('Resultado do cadastro:', resultado);
+            const netInfo = await NetInfo.fetch();
+            if (netInfo.isConnected) {
+                const resultado = await cadastrarUsuario(usuario);
 
-            if (!resultado) {
-                toast.show({
-                    title: 'Usuário não cadastrado!',
-                    description: 'O Usuário não foi cadastrado! Verifique os campos!',
-                    backgroundColor: 'red.500',
-                });
+                console.log('Resultado do cadastro:', resultado);
+
+                if (!resultado) {
+                    toast.show({
+                        title: 'Usuário não cadastrado!',
+                        description: 'O Usuário não foi cadastrado! Verifique os campos!',
+                        backgroundColor: 'red.500',
+                    });
+                } else {
+                    // logInfo({
+                    //     userId: resultado.data.id,
+                    //     userName: data.nome,
+                    //     itemId: resultado.data.id,
+                    //     itemName: 'Cadastro de Usuário',
+                    //     action: `Cadastro realizado com sucesso para o usuário: ${data.email}`,
+                    // });
+                    toast.show({
+                        title: 'Usuário Cadastrado!',
+                        description: 'O Usuário foi cadastrado com sucesso!',
+                        backgroundColor: 'green.500',
+                    });
+                    reset();
+                    setIsDirty(false);
+                }
             } else {
-                // logInfo({
-                //     userId: resultado.data.id,
-                //     userName: data.nome,
-                //     itemId: resultado.data.id,
-                //     itemName: 'Cadastro de Usuário',
-                //     action: `Cadastro realizado com sucesso para o usuário: ${data.email}`,
-                // });
+                // Sem conexão: Salvar localmente
+                await LocalStorageService.saveItem('cadastroUsuario', usuario);
                 toast.show({
-                    title: 'Usuário Cadastrado!',
-                    description: 'O Usuário foi cadastrado com sucesso!',
-                    backgroundColor: 'green.500',
+                    title: 'Sem conexão!',
+                    description: 'Os dados foram salvos localmente e serão enviados quando houver conexão.',
+                    backgroundColor: 'yellow.500',
                 });
-                reset();
-                setIsDirty(false);
             }
         } catch (err) {
             // logError(`Erro ao cadastrar usuário: ${err.message}`);
@@ -248,6 +267,11 @@ export default function CadastroUsuario() {
                         )}
                     />
                     {errors.confirmacao && <Text style={{ color: 'red' }}>{errors.confirmacao.message}</Text>}
+                </Box>
+                <Box>
+                    <Text mt={4} fontSize="sm">
+                        Data de Cadastro: {dataCadastro}
+                    </Text>
                 </Box>
 
                 <Button w="100%" bg={TEMAS.colors.blue[800]} my={5} borderRadius="lg" onPress={handleSubmit(handleCadastro)}>

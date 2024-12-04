@@ -53,7 +53,7 @@ export async function atualizarUsuario(id: string, usuario: Usuario) {
             usuario,
             {
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                 },
             }
         );

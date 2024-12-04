@@ -5,5 +5,6 @@ export interface Usuario {
     email: string;
     senha: string;
     isActive: number;
-    role: string;   
+    role: string;
+    dataCadastro: string;
 }
